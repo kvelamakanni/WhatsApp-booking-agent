@@ -90,8 +90,16 @@ module.exports = async (req, res) => {
 
     let session = await getSession(from);
     if (!session) {
+      // Brand-new conversation: just greet and stop here. The trigger
+      // message itself ("Hi", "hello", etc.) is not real booking data —
+      // don't also run it through dispatch(), or it gets treated as the
+      // answer to "where would you like to stay?" (step 1 only checks
+      // length >= 2, so "Hi" would pass as a destination).
       session = createSession();
       await sendWhatsAppText(from, phoneNumberId, greet());
+      await setSession(from, session);
+      res.status(200).end();
+      return;
     }
 
     const replies = await dispatch(session, text);
