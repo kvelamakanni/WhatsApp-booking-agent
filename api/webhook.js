@@ -10,6 +10,7 @@ const { getSession, setSession, acquireLock, releaseLock } = require('../lib/ses
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
+const RESET_KEYWORDS = new Set(['clear', 'reset', 'restart', 'start over']);
 
 async function sendWhatsAppText(to, phoneNumberId, text) {
   try {
@@ -84,6 +85,14 @@ module.exports = async (req, res) => {
     gotLock = await acquireLock(from);
     if (!gotLock) {
       await sendWhatsAppText(from, phoneNumberId, "Still working on your last message — one moment!");
+      res.status(200).end();
+      return;
+    }
+
+    if (RESET_KEYWORDS.has((text || '').trim().toLowerCase())) {
+      const freshSession = createSession();
+      await setSession(from, freshSession);
+      await sendWhatsAppText(from, phoneNumberId, "Session cleared! " + greet());
       res.status(200).end();
       return;
     }
