@@ -62,11 +62,10 @@ module.exports = async (req, res) => {
   const change = entry?.changes?.[0];
   const message = change?.value?.messages?.[0];
 
-  // Ack Meta immediately so it doesn't retry/duplicate the webhook delivery
-  res.status(200).end();
-
   if (!message) {
-    return; // e.g. a status update event, not an actual message
+    // e.g. a status update event, not an actual message — nothing further to do
+    res.status(200).end();
+    return;
   }
 
   const from = message.from;
@@ -75,11 +74,17 @@ module.exports = async (req, res) => {
 
   console.log(`Message from ${from}: ${text}`);
 
+  // IMPORTANT: do all the work BEFORE responding, not after. Vercel's
+  // serverless runtime can freeze/tear down the execution context as soon
+  // as the HTTP response is sent — continuing to `await` Redis/MCP/WhatsApp
+  // calls after an early res.end() (as the local Express version safely
+  // does) can get silently killed mid-flight with no further logs at all.
   let gotLock = false;
   try {
     gotLock = await acquireLock(from);
     if (!gotLock) {
       await sendWhatsAppText(from, phoneNumberId, "Still working on your last message — one moment!");
+      res.status(200).end();
       return;
     }
 
@@ -103,4 +108,6 @@ module.exports = async (req, res) => {
       await releaseLock(from).catch((err) => console.error('Error releasing lock:', err));
     }
   }
+
+  res.status(200).end();
 };
