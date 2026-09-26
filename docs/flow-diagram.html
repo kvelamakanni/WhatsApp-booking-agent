@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp Hotel Booking (Vercel) — Complete Flow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #fff; }
+  .page { max-width: 1400px; margin: 0 auto; padding: 2.5rem 3rem; }
+  .header { text-align: center; margin-bottom: 2rem; }
+  .header h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #1e293b; }
+  .header p { font-size: 0.8rem; color: #64748b; margin-top: 0.3rem; letter-spacing: 1px; }
+  svg { width: 100%; height: auto; display: block; }
+  .footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; font-size: 0.65rem; color: #94a3b8; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="header">
+  <h1>WhatsApp Hotel Booking — Vercel Edition</h1>
+  <p>Complete Interaction Flow &mdash; Rule-Based Extraction, MCP Tool Calls &amp; Step Transitions (No LLM)</p>
+</div>
+
+<svg viewBox="0 0 1100 1460" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a-right" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#0891b2"/></marker>
+    <marker id="a-right-pink" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#db2777"/></marker>
+    <marker id="a-right-orange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#ea580c"/></marker>
+    <marker id="a-right-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#16a34a"/></marker>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <!-- ═══ PRE-STEP: WEBHOOK PLUMBING ═══ -->
+  <rect x="30" y="10" width="1040" height="45" rx="10" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="550" y="30" text-anchor="middle" font-size="9" fill="#16a34a" font-weight="700" letter-spacing="2">EVERY INCOMING MESSAGE</text>
+  <text x="550" y="45" text-anchor="middle" font-size="7.5" fill="#64748b">WhatsApp → api/webhook.js → acquireLock(phone) → getSession(phone) from Vercel KV → dispatch() → setSession() → releaseLock() → send replies</text>
+
+  <!-- ═══ SWIM LANE HEADERS ═══ -->
+  <rect x="30" y="70" width="200" height="40" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+  <text x="130" y="95" text-anchor="middle" font-size="11" fill="#2563eb" font-weight="700">👤 USER</text>
+
+  <rect x="290" y="70" width="200" height="40" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="390" y="95" text-anchor="middle" font-size="11" fill="#ea580c" font-weight="700">⚙️ RULE-BASED EXTRACT</text>
+
+  <rect x="560" y="70" width="200" height="40" rx="8" fill="#fdf2f8" stroke="#f9a8d4" stroke-width="1.5"/>
+  <text x="660" y="95" text-anchor="middle" font-size="11" fill="#db2777" font-weight="700">🔧 MCP TOOLS</text>
+
+  <rect x="830" y="70" width="230" height="40" rx="8" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1.5"/>
+  <text x="945" y="95" text-anchor="middle" font-size="11" fill="#0891b2" font-weight="700">💬 RESPONSE TO USER</text>
+
+  <!-- Vertical lane lines -->
+  <line x1="130" y1="115" x2="130" y2="1440" stroke="#bfdbfe" stroke-width="1" stroke-dasharray="4,4" opacity="0.5"/>
+  <line x1="390" y1="115" x2="390" y2="1440" stroke="#fed7aa" stroke-width="1" stroke-dasharray="4,4" opacity="0.5"/>
+  <line x1="660" y1="115" x2="660" y2="1440" stroke="#f9a8d4" stroke-width="1" stroke-dasharray="4,4" opacity="0.5"/>
+  <line x1="945" y1="115" x2="945" y2="1440" stroke="#a5f3fc" stroke-width="1" stroke-dasharray="4,4" opacity="0.5"/>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- STEP 1: DESTINATION                                     -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <rect x="0" y="125" width="1100" height="95" rx="0" fill="#ecfeff" opacity="0.3"/>
+  <text x="15" y="143" font-size="9" fill="#0891b2" font-weight="700" letter-spacing="1">STEP 1</text>
+
+  <rect x="50" y="150" width="160" height="35" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1" filter="url(#shadow)"/>
+  <text x="130" y="172" text-anchor="middle" font-size="9" fill="#1e293b" font-weight="600">"Paris"</text>
+
+  <line x1="215" y1="167" x2="295" y2="167" stroke="#ea580c" stroke-width="1.5" marker-end="url(#a-right-orange)"/>
+
+  <rect x="300" y="150" width="180" height="35" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="390" y="165" text-anchor="middle" font-size="8" fill="#ea580c" font-weight="700">handleStep1()</text>
+  <text x="390" y="177" text-anchor="middle" font-size="7" fill="#64748b">trim + punctuation strip</text>
+
+  <line x1="485" y1="167" x2="835" y2="167" stroke="#0891b2" stroke-width="1.5" marker-end="url(#a-right)"/>
+
+  <rect x="840" y="150" width="220" height="35" rx="6" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1" filter="url(#shadow)"/>
+  <text x="950" y="165" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">"Got it — Paris! When would</text>
+  <text x="950" y="177" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">you like to check in/out?"</text>
+
+  <rect x="50" y="195" width="110" height="20" rx="4" fill="#0891b2"/>
+  <text x="105" y="209" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">✓ destination: Paris</text>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- STEP 2: DATES                                           -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <rect x="0" y="230" width="1100" height="95" rx="0" fill="#fff7ed" opacity="0.25"/>
+  <text x="15" y="248" font-size="9" fill="#2563eb" font-weight="700" letter-spacing="1">STEP 2</text>
+
+  <rect x="50" y="255" width="160" height="35" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1" filter="url(#shadow)"/>
+  <text x="130" y="277" text-anchor="middle" font-size="9" fill="#1e293b" font-weight="600">"Next Friday to Sunday"</text>
+
+  <line x1="215" y1="272" x2="295" y2="272" stroke="#ea580c" stroke-width="1.5" marker-end="url(#a-right-orange)"/>
+
+  <rect x="300" y="255" width="180" height="35" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="390" y="270" text-anchor="middle" font-size="8" fill="#ea580c" font-weight="700">extractDates()</text>
+  <text x="390" y="282" text-anchor="middle" font-size="7" fill="#64748b">chrono-node → YYYY-MM-DD</text>
+
+  <line x1="485" y1="272" x2="835" y2="272" stroke="#0891b2" stroke-width="1.5" marker-end="url(#a-right)"/>
+
+  <rect x="840" y="255" width="220" height="35" rx="6" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1" filter="url(#shadow)"/>
+  <text x="950" y="270" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">"Check-in 2026-10-02, check-out</text>
+  <text x="950" y="282" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">2026-10-04 — how many guests?"</text>
+
+  <rect x="50" y="300" width="200" height="20" rx="4" fill="#2563eb"/>
+  <text x="150" y="314" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">✓ checkin/checkout resolved</text>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- STEP 3: GUESTS → searchHotels()                         -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <rect x="0" y="335" width="1100" height="135" rx="0" fill="#ecfeff" opacity="0.3"/>
+  <text x="15" y="353" font-size="9" fill="#7c3aed" font-weight="700" letter-spacing="1">STEP 3</text>
+
+  <rect x="50" y="360" width="160" height="30" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1" filter="url(#shadow)"/>
+  <text x="130" y="379" text-anchor="middle" font-size="9" fill="#1e293b" font-weight="600">"2 adults"</text>
+
+  <line x1="215" y1="375" x2="295" y2="375" stroke="#ea580c" stroke-width="1.5" marker-end="url(#a-right-orange)"/>
+
+  <rect x="300" y="360" width="180" height="30" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="390" y="372" text-anchor="middle" font-size="8" fill="#ea580c" font-weight="700">extractGuestCount()</text>
+  <text x="390" y="384" text-anchor="middle" font-size="7" fill="#64748b">digit/word regex → count: 2</text>
+
+  <line x1="485" y1="375" x2="565" y2="410" stroke="#db2777" stroke-width="1.5" marker-end="url(#a-right-pink)"/>
+  <text x="530" y="388" text-anchor="middle" font-size="7" fill="#db2777" font-weight="700">TRIGGER</text>
+
+  <rect x="570" y="400" width="180" height="35" rx="6" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="660" y="414" text-anchor="middle" font-size="8" fill="#db2777" font-weight="700">searchHotels()</text>
+  <text x="660" y="427" text-anchor="middle" font-size="7" fill="#64748b">direct HTTPS → Devara MCP</text>
+
+  <line x1="755" y1="417" x2="835" y2="417" stroke="#0891b2" stroke-width="1.5" marker-end="url(#a-right)"/>
+  <text x="795" y="411" text-anchor="middle" font-size="7" fill="#0891b2" font-weight="600">results</text>
+
+  <rect x="840" y="400" width="220" height="55" rx="6" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1" filter="url(#shadow)"/>
+  <text x="950" y="414" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">"Found 2 hotels in Paris:"</text>
+  <text x="950" y="428" text-anchor="middle" font-size="7" fill="#64748b">1. Le Marais Hotel — $210/night</text>
+  <text x="950" y="440" text-anchor="middle" font-size="7" fill="#64748b">2. Grand Palais — $340/night</text>
+  <text x="950" y="452" text-anchor="middle" font-size="7" fill="#64748b">"Reply with a number"</text>
+
+  <rect x="50" y="455" width="70" height="20" rx="4" fill="#7c3aed"/>
+  <text x="85" y="469" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">✓ guests: 2</text>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- STEP 4: HOTEL SELECTION → getHotelDetails()             -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <rect x="0" y="480" width="1100" height="135" rx="0" fill="#fff7ed" opacity="0.2"/>
+  <text x="15" y="498" font-size="9" fill="#db2777" font-weight="700" letter-spacing="1">STEP 4</text>
+
+  <rect x="50" y="505" width="160" height="30" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1" filter="url(#shadow)"/>
+  <text x="130" y="524" text-anchor="middle" font-size="9" fill="#1e293b" font-weight="600">"1"</text>
+
+  <line x1="215" y1="520" x2="295" y2="520" stroke="#ea580c" stroke-width="1.5" marker-end="url(#a-right-orange)"/>
+
+  <rect x="300" y="505" width="180" height="30" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="390" y="517" text-anchor="middle" font-size="8" fill="#ea580c" font-weight="700">handleStep4()</text>
+  <text x="390" y="529" text-anchor="middle" font-size="7" fill="#64748b">numeric / name / word match</text>
+
+  <line x1="485" y1="520" x2="565" y2="555" stroke="#db2777" stroke-width="1.5" marker-end="url(#a-right-pink)"/>
+  <text x="530" y="533" text-anchor="middle" font-size="7" fill="#db2777" font-weight="700">TRIGGER</text>
+
+  <rect x="570" y="545" width="180" height="35" rx="6" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="660" y="559" text-anchor="middle" font-size="8" fill="#db2777" font-weight="700">getHotelDetails()</text>
+  <text x="660" y="572" text-anchor="middle" font-size="7" fill="#64748b">Le Marais Hotel → rooms</text>
+
+  <line x1="755" y1="562" x2="835" y2="562" stroke="#0891b2" stroke-width="1.5" marker-end="url(#a-right)"/>
+
+  <rect x="840" y="545" width="220" height="55" rx="6" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1" filter="url(#shadow)"/>
+  <text x="950" y="559" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">"Room types:"</text>
+  <text x="950" y="573" text-anchor="middle" font-size="7" fill="#64748b">1. Deluxe King</text>
+  <text x="950" y="585" text-anchor="middle" font-size="7" fill="#64748b">2. Standard Twin</text>
+  <text x="950" y="597" text-anchor="middle" font-size="7" fill="#64748b">"Reply with a number"</text>
+
+  <rect x="50" y="600" width="130" height="20" rx="4" fill="#db2777"/>
+  <text x="115" y="614" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">✓ hotel: Le Marais</text>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- STEP 5: ROOM SELECTION                                  -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <rect x="0" y="620" width="1100" height="95" rx="0" fill="#ecfeff" opacity="0.3"/>
+  <text x="15" y="638" font-size="9" fill="#ea580c" font-weight="700" letter-spacing="1">STEP 5</text>
+
+  <rect x="50" y="645" width="160" height="30" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1" filter="url(#shadow)"/>
+  <text x="130" y="664" text-anchor="middle" font-size="9" fill="#1e293b" font-weight="600">"1"</text>
+
+  <line x1="215" y1="660" x2="295" y2="660" stroke="#ea580c" stroke-width="1.5" marker-end="url(#a-right-orange)"/>
+
+  <rect x="300" y="645" width="180" height="30" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="390" y="657" text-anchor="middle" font-size="8" fill="#ea580c" font-weight="700">handleStep5()</text>
+  <text x="390" y="669" text-anchor="middle" font-size="7" fill="#64748b">numeric / name / word match</text>
+
+  <!-- No MCP call — direct to response -->
+  <line x1="485" y1="660" x2="835" y2="660" stroke="#0891b2" stroke-width="1.5" marker-end="url(#a-right)"/>
+
+  <rect x="840" y="645" width="220" height="35" rx="6" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1" filter="url(#shadow)"/>
+  <text x="950" y="659" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">"Great choice — Deluxe King!</text>
+  <text x="950" y="672" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">Please send name/email/phone."</text>
+
+  <rect x="50" y="690" width="130" height="20" rx="4" fill="#ea580c"/>
+  <text x="115" y="704" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">✓ room: Deluxe King</text>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- STEP 6: CONTACT DETAILS                                -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <rect x="0" y="715" width="1100" height="115" rx="0" fill="#fff7ed" opacity="0.2"/>
+  <text x="15" y="733" font-size="9" fill="#16a34a" font-weight="700" letter-spacing="1">STEP 6</text>
+
+  <rect x="50" y="740" width="160" height="45" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1" filter="url(#shadow)"/>
+  <text x="130" y="757" text-anchor="middle" font-size="8" fill="#1e293b" font-weight="600">"John Doe,</text>
+  <text x="130" y="770" text-anchor="middle" font-size="8" fill="#1e293b" font-weight="600">john@x.com, 555-123-4567"</text>
+
+  <line x1="215" y1="762" x2="295" y2="762" stroke="#ea580c" stroke-width="1.5" marker-end="url(#a-right-orange)"/>
+
+  <rect x="300" y="740" width="180" height="45" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="390" y="756" text-anchor="middle" font-size="8" fill="#ea580c" font-weight="700">extractGuestDetails()</text>
+  <text x="390" y="768" text-anchor="middle" font-size="7" fill="#64748b">email regex, phone regex,</text>
+  <text x="390" y="779" text-anchor="middle" font-size="7" fill="#64748b">remainder = name (guarded)</text>
+
+  <line x1="485" y1="762" x2="835" y2="762" stroke="#0891b2" stroke-width="1.5" marker-end="url(#a-right)"/>
+
+  <rect x="840" y="740" width="220" height="35" rx="6" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1" filter="url(#shadow)"/>
+  <text x="950" y="754" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">(all 3 fields captured —</text>
+  <text x="950" y="767" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">advances straight to Step 7)</text>
+
+  <rect x="50" y="795" width="190" height="20" rx="4" fill="#16a34a"/>
+  <text x="145" y="809" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">✓ name/email/phone captured</text>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- STEP 7: BOOKING CONFIRMATION (2 MCP calls)             -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <rect x="0" y="840" width="1100" height="255" rx="0" fill="#ecfeff" opacity="0.3"/>
+  <text x="15" y="858" font-size="9" fill="#0891b2" font-weight="700" letter-spacing="1">STEP 7</text>
+
+  <rect x="50" y="865" width="160" height="25" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="130" y="882" text-anchor="middle" font-size="8" fill="#16a34a" font-weight="700">⚡ Auto-triggered</text>
+
+  <line x1="215" y1="877" x2="565" y2="877" stroke="#db2777" stroke-width="1.5" marker-end="url(#a-right-pink)"/>
+  <text x="390" y="871" text-anchor="middle" font-size="7" fill="#db2777" font-weight="700">TRIGGER MCP</text>
+
+  <rect x="570" y="865" width="180" height="35" rx="6" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="660" y="879" text-anchor="middle" font-size="8" fill="#db2777" font-weight="700">createBookingSession()</text>
+  <text x="660" y="892" text-anchor="middle" font-size="7" fill="#64748b">hotel + room + dates + guests</text>
+
+  <line x1="660" y1="905" x2="660" y2="925" stroke="#db2777" stroke-width="1.2"/>
+  <text x="680" y="918" font-size="7" fill="#db2777" font-weight="600">session_id</text>
+
+  <rect x="840" y="910" width="220" height="30" rx="6" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1" filter="url(#shadow)"/>
+  <text x="950" y="929" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">"Room held! Total: USD 420"</text>
+  <line x1="755" y1="928" x2="835" y2="928" stroke="#0891b2" stroke-width="1.2" marker-end="url(#a-right)"/>
+
+  <rect x="570" y="950" width="180" height="35" rx="6" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="660" y="964" text-anchor="middle" font-size="8" fill="#db2777" font-weight="700">completeBooking()</text>
+  <text x="660" y="977" text-anchor="middle" font-size="7" fill="#64748b">session_id + payment_token</text>
+
+  <line x1="660" y1="935" x2="660" y2="948" stroke="#db2777" stroke-width="1.2"/>
+  <text x="680" y="946" font-size="7" fill="#db2777" font-weight="600">auto-complete</text>
+
+  <line x1="755" y1="967" x2="835" y2="997" stroke="#0891b2" stroke-width="1.5" marker-end="url(#a-right)"/>
+
+  <rect x="840" y="990" width="220" height="65" rx="6" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1" filter="url(#shadow)"/>
+  <text x="950" y="1006" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="700">✅ Booking Confirmed!</text>
+  <text x="950" y="1020" text-anchor="middle" font-size="7" fill="#64748b">Order ID: ORD-999</text>
+  <text x="950" y="1032" text-anchor="middle" font-size="7" fill="#64748b">Le Marais Hotel · Deluxe King</text>
+  <text x="950" y="1044" text-anchor="middle" font-size="7" fill="#64748b">2 nights · Total: USD 420.00</text>
+
+  <rect x="50" y="1060" width="130" height="20" rx="4" fill="#0891b2"/>
+  <text x="115" y="1074" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">✓ BOOKING COMPLETE</text>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- LEGEND                                                  -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <rect x="50" y="1120" width="1000" height="150" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="550" y="1142" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700" letter-spacing="2">LEGEND</text>
+
+  <rect x="80" y="1155" width="80" height="20" rx="4" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="170" y="1169" font-size="8" fill="#ea580c" font-weight="600">Rule-Based Extraction — chrono-node (dates), regex (count/email/phone), fast-path numeric/name match (selection)</text>
+
+  <rect x="80" y="1180" width="80" height="20" rx="4" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5"/>
+  <text x="170" y="1194" font-size="8" fill="#db2777" font-weight="600">MCP Tool Call — direct HTTPS to Devara Hotels MCP (no proxy, no local AI backend)</text>
+
+  <rect x="650" y="1155" width="160" height="20" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="730" y="1169" text-anchor="middle" font-size="8" fill="#475569" font-weight="700">0 LLM Calls per session</text>
+
+  <rect x="650" y="1180" width="160" height="20" rx="4" fill="#fdf2f8" stroke="#f9a8d4" stroke-width="1"/>
+  <text x="730" y="1194" text-anchor="middle" font-size="8" fill="#db2777" font-weight="700">4 MCP Calls per session</text>
+
+  <rect x="850" y="1155" width="170" height="20" rx="4" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+  <text x="935" y="1169" text-anchor="middle" font-size="8" fill="#ea580c" font-weight="600">Steps 1,2,5,6 — extraction only</text>
+
+  <rect x="850" y="1180" width="170" height="20" rx="4" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1"/>
+  <text x="935" y="1194" text-anchor="middle" font-size="8" fill="#0891b2" font-weight="600">Steps 3,4,7 — extraction + MCP</text>
+
+  <text x="550" y="1220" text-anchor="middle" font-size="7.5" fill="#64748b" font-style="italic">Compared to the LLM-based web app / local WhatsApp integration: same 7 steps and same MCP tools, but every callAI()/extractDates()/</text>
+  <text x="550" y="1233" text-anchor="middle" font-size="7.5" fill="#64748b" font-style="italic">extractGuestDetails() call is replaced by chrono-node + regex + fast-path matching — no Ollama, no proxy.cjs, fully deployable on Vercel.</text>
+  <text x="550" y="1250" text-anchor="middle" font-size="7.5" fill="#64748b" font-style="italic">Session state (shown in the green ✓ badges) persists in Vercel KV, keyed by WhatsApp phone number, instead of an in-memory Map.</text>
+
+</svg>
+
+</div>
+</body>
+</html>
