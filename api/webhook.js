@@ -75,13 +75,14 @@ module.exports = async (req, res) => {
 
   console.log(`Message from ${from}: ${text}`);
 
-  const gotLock = await acquireLock(from);
-  if (!gotLock) {
-    await sendWhatsAppText(from, phoneNumberId, "Still working on your last message — one moment!");
-    return;
-  }
-
+  let gotLock = false;
   try {
+    gotLock = await acquireLock(from);
+    if (!gotLock) {
+      await sendWhatsAppText(from, phoneNumberId, "Still working on your last message — one moment!");
+      return;
+    }
+
     let session = await getSession(from);
     if (!session) {
       session = createSession();
@@ -96,8 +97,10 @@ module.exports = async (req, res) => {
     }
   } catch (err) {
     console.error('Error handling booking message:', err);
-    await sendWhatsAppText(from, phoneNumberId, "Sorry, I couldn't process that right now.");
+    await sendWhatsAppText(from, phoneNumberId, "Sorry, I couldn't process that right now.").catch(() => {});
   } finally {
-    await releaseLock(from);
+    if (gotLock) {
+      await releaseLock(from).catch((err) => console.error('Error releasing lock:', err));
+    }
   }
 };
