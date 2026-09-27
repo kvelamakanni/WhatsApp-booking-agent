@@ -6,7 +6,7 @@
 // fully rule-based and calls Devara Hotels MCP directly.
 
 const { createSession, greet, dispatch } = require('../lib/bookingAgent');
-const { getSession, setSession, acquireLock, releaseLock, markMessageProcessed } = require('../lib/session');
+const { getSession, setSession, clearSession, acquireLock, releaseLock, markMessageProcessed } = require('../lib/session');
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
@@ -110,9 +110,13 @@ module.exports = async (req, res) => {
     }
 
     if (RESET_KEYWORDS.has((text || '').trim().toLowerCase())) {
-      const freshSession = createSession();
-      await setSession(from, freshSession);
-      await sendWhatsAppText(from, phoneNumberId, "Session cleared! " + greet());
+      // Delete the session outright rather than replacing it with a fresh
+      // one — that way the *next* message takes the brand-new-conversation
+      // path below (just greet, don't consume it as data), instead of being
+      // treated as the answer to "where would you like to stay?" the way a
+      // persisted fresh session would be.
+      await clearSession(from);
+      await sendWhatsAppText(from, phoneNumberId, 'Cleared! Send any message to start a new conversation.');
       res.status(200).end();
       return;
     }
