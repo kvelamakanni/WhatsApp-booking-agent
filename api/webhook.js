@@ -6,7 +6,7 @@
 // fully rule-based and calls Devara Hotels MCP directly.
 
 const { createSession, greet, dispatch } = require('../lib/bookingAgent');
-const { getSession, setSession, acquireLock, releaseLock } = require('../lib/session');
+const { getSession, setSession, acquireLock, releaseLock, markMessageProcessed } = require('../lib/session');
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
@@ -72,8 +72,28 @@ module.exports = async (req, res) => {
   const from = message.from;
   const text = message.text?.body;
   const phoneNumberId = change.value.metadata.phone_number_id;
+  const messageId = message.id;
 
   console.log(`Message from ${from}: ${text}`);
+
+  // WhatsApp retries a webhook delivery if it doesn't get an ack quickly
+  // enough, resending the exact same message. Without deduplicating by
+  // message ID, a retry gets fully reprocessed and can advance the booking
+  // state machine using stale/repeated text (e.g. the retried "Hi" getting
+  // interpreted as a destination, then a further retry as a dates answer).
+  if (messageId) {
+    let isNewMessage = true;
+    try {
+      isNewMessage = await markMessageProcessed(messageId);
+    } catch (err) {
+      console.error('Error checking message dedupe (proceeding anyway):', err);
+    }
+    if (!isNewMessage) {
+      console.log(`Duplicate delivery of message ${messageId} — skipping reprocessing.`);
+      res.status(200).end();
+      return;
+    }
+  }
 
   // IMPORTANT: do all the work BEFORE responding, not after. Vercel's
   // serverless runtime can freeze/tear down the execution context as soon
