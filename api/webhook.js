@@ -12,7 +12,7 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const RESET_KEYWORDS = new Set(['clear', 'reset', 'restart', 'start over']);
 
-async function sendWhatsAppText(to, phoneNumberId, text) {
+async function sendWhatsAppPayload(phoneNumberId, body) {
   try {
     const res = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
       method: 'POST',
@@ -20,20 +20,66 @@ async function sendWhatsAppText(to, phoneNumberId, text) {
         'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        to,
-        text: { body: text },
-      }),
+      body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => null);
     if (!res.ok) {
       console.error('WhatsApp API rejected the message:', res.status, JSON.stringify(data));
       return;
     }
-    console.log('Reply sent:', text, '—', JSON.stringify(data));
+    console.log('Reply sent:', JSON.stringify(body), '—', JSON.stringify(data));
   } catch (err) {
     console.error('Error sending WhatsApp reply:', err);
+  }
+}
+
+async function sendWhatsAppText(to, phoneNumberId, text) {
+  await sendWhatsAppPayload(phoneNumberId, {
+    messaging_product: 'whatsapp',
+    to,
+    text: { body: text },
+  });
+}
+
+/**
+ * Sends an interactive List Message or Quick Reply Buttons message.
+ * `reply` is one of the typed objects bookingAgent.js now returns:
+ *   { type: 'list', body, button, rows: [{id, title, description?}] }
+ *   { type: 'button', body, buttons: [{id, title}] }
+ */
+async function sendWhatsAppInteractive(to, phoneNumberId, reply) {
+  const interactive =
+    reply.type === 'list'
+      ? {
+          type: 'list',
+          body: { text: reply.body },
+          action: {
+            button: reply.button,
+            sections: [{ rows: reply.rows.map((r) => ({ id: r.id, title: r.title, description: r.description })) }],
+          },
+        }
+      : {
+          type: 'button',
+          body: { text: reply.body },
+          action: {
+            buttons: reply.buttons.map((b) => ({ type: 'reply', reply: { id: b.id, title: b.title } })),
+          },
+        };
+
+  await sendWhatsAppPayload(phoneNumberId, {
+    messaging_product: 'whatsapp',
+    to,
+    type: 'interactive',
+    interactive,
+  });
+}
+
+/** Sends a plain string as text, or a { type: 'list' | 'button', ... } object as an interactive message. */
+async function sendReply(to, phoneNumberId, reply) {
+  if (typeof reply === 'string') {
+    await sendWhatsAppText(to, phoneNumberId, reply);
+  } else {
+    await sendWhatsAppInteractive(to, phoneNumberId, reply);
   }
 }
 
@@ -70,9 +116,19 @@ module.exports = async (req, res) => {
   }
 
   const from = message.from;
-  const text = message.text?.body;
   const phoneNumberId = change.value.metadata.phone_number_id;
   const messageId = message.id;
+
+  // A tapped list row or quick-reply button arrives as type "interactive"
+  // (not "text") — its reply.id is what we treat as the guest's answer.
+  // We chose those IDs (in bookingAgent.js) to be exactly the same values
+  // the existing plain-text parsing already accepts — e.g. "2" for the
+  // second hotel, or "New York" for that destination — so every step
+  // handler keeps working unchanged whether the guest tapped or typed.
+  const text =
+    message.type === 'interactive'
+      ? message.interactive?.button_reply?.id ?? message.interactive?.list_reply?.id
+      : message.text?.body;
 
   console.log(`Message from ${from}: ${text}`);
 
@@ -95,6 +151,13 @@ module.exports = async (req, res) => {
     }
   }
 
+  if (text === undefined) {
+    console.log(`Unsupported message type "${message.type}" — ignoring.`);
+    await sendReply(from, phoneNumberId, "Sorry, I can only understand text messages and menu selections right now.");
+    res.status(200).end();
+    return;
+  }
+
   // IMPORTANT: do all the work BEFORE responding, not after. Vercel's
   // serverless runtime can freeze/tear down the execution context as soon
   // as the HTTP response is sent — continuing to `await` Redis/MCP/WhatsApp
@@ -104,7 +167,7 @@ module.exports = async (req, res) => {
   try {
     gotLock = await acquireLock(from);
     if (!gotLock) {
-      await sendWhatsAppText(from, phoneNumberId, "Still working on your last message — one moment!");
+      await sendReply(from, phoneNumberId, "Still working on your last message — one moment!");
       res.status(200).end();
       return;
     }
@@ -116,7 +179,7 @@ module.exports = async (req, res) => {
       // treated as the answer to "where would you like to stay?" the way a
       // persisted fresh session would be.
       await clearSession(from);
-      await sendWhatsAppText(from, phoneNumberId, 'Cleared! Send any message to start a new conversation.');
+      await sendReply(from, phoneNumberId, 'Cleared! Send any message to start a new conversation.');
       res.status(200).end();
       return;
     }
@@ -129,7 +192,7 @@ module.exports = async (req, res) => {
       // answer to "where would you like to stay?" (step 1 only checks
       // length >= 2, so "Hi" would pass as a destination).
       session = createSession();
-      await sendWhatsAppText(from, phoneNumberId, greet());
+      await sendReply(from, phoneNumberId, greet());
       await setSession(from, session);
       res.status(200).end();
       return;
@@ -139,11 +202,11 @@ module.exports = async (req, res) => {
     await setSession(from, session);
 
     for (const reply of replies) {
-      await sendWhatsAppText(from, phoneNumberId, reply);
+      await sendReply(from, phoneNumberId, reply);
     }
   } catch (err) {
     console.error('Error handling booking message:', err);
-    await sendWhatsAppText(from, phoneNumberId, "Sorry, I couldn't process that right now.").catch(() => {});
+    await sendReply(from, phoneNumberId, "Sorry, I couldn't process that right now.").catch(() => {});
   } finally {
     if (gotLock) {
       await releaseLock(from).catch((err) => console.error('Error releasing lock:', err));
