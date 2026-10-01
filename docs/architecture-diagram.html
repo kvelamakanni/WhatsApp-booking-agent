@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp Hotel Booking Agent — System Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #fff; }
+  .page { max-width: 1400px; margin: 0 auto; padding: 2.5rem 3rem; }
+  .header { text-align: center; margin-bottom: 2.5rem; }
+  .header h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #1e293b; }
+  .header p { font-size: 0.8rem; color: #64748b; margin-top: 0.3rem; letter-spacing: 1px; }
+  svg { width: 100%; height: auto; display: block; }
+  .footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; font-size: 0.65rem; color: #94a3b8; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="header">
+  <h1>WhatsApp Hotel Booking Agent</h1>
+  <p>How a guest's WhatsApp message becomes a confirmed hotel booking</p>
+</div>
+
+<svg viewBox="0 0 1200 790" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#16a34a"/></marker>
+    <marker id="arr-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#2563eb"/></marker>
+    <marker id="arr-purple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#7c3aed"/></marker>
+    <marker id="arr-orange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#ea580c"/></marker>
+    <marker id="arr-cyan" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#0891b2"/></marker>
+    <marker id="arr-meta" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#1877F2"/></marker>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+    <filter id="shadow-sm" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.05"/>
+    </filter>
+  </defs>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- LAYER 1: WHATSAPP USER                       -->
+  <!-- ═══════════════════════════════════════════ -->
+  <rect x="380" y="10" width="440" height="55" rx="10" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="380" y="10" width="440" height="3" rx="10" fill="#16a34a"/>
+  <text x="600" y="30" text-anchor="middle" font-size="9" fill="#16a34a" font-weight="700" letter-spacing="2">GUEST ON WHATSAPP</text>
+  <text x="600" y="48" text-anchor="middle" font-size="9" fill="#1e293b" font-weight="700">📱 Types a message, gets a reply — just like texting a person</text>
+
+  <line x1="600" y1="67" x2="600" y2="100" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arr-green)"/>
+  <text x="620" y="87" font-size="7" fill="#16a34a" font-weight="600">Message sent</text>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- LAYER 2: META / WHATSAPP BUSINESS PLATFORM   -->
+  <!-- ═══════════════════════════════════════════ -->
+  <rect x="120" y="103" width="960" height="90" rx="12" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="120" y="103" width="960" height="4" rx="12" fill="#1877F2"/>
+  <text x="600" y="125" text-anchor="middle" font-size="10" fill="#1877F2" font-weight="700" letter-spacing="2">META / WHATSAPP BUSINESS PLATFORM</text>
+  <text x="600" y="148" text-anchor="middle" font-size="9" fill="#1e293b" font-weight="700">📶 The official WhatsApp service — passes the guest's message to us, and our reply back to them</text>
+  <text x="600" y="164" text-anchor="middle" font-size="7" fill="#64748b">Run by Meta, not part of our own system</text>
+
+  <line x1="600" y1="193" x2="600" y2="223" stroke="#1877F2" stroke-width="1.8" marker-end="url(#arr-meta)"/>
+  <text x="620" y="210" font-size="7" fill="#1877F2" font-weight="600">Forwards the message</text>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- LAYER 3: BOOKING AGENT                       -->
+  <!-- ═══════════════════════════════════════════ -->
+  <rect x="120" y="226" width="960" height="175" rx="12" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="120" y="226" width="960" height="4" rx="12" fill="#2563eb"/>
+  <text x="600" y="248" text-anchor="middle" font-size="10" fill="#2563eb" font-weight="700" letter-spacing="2">BOOKING AGENT</text>
+
+  <rect x="145" y="263" width="205" height="70" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow-sm)"/>
+  <text x="247" y="286" text-anchor="middle" font-size="8" fill="#1e293b" font-weight="700">Where To Stay</text>
+  <text x="247" y="302" text-anchor="middle" font-size="6.5" fill="#64748b">Matches the guest's city to</text>
+  <text x="247" y="313" text-anchor="middle" font-size="6.5" fill="#64748b">one of the available locations</text>
+
+  <rect x="365" y="263" width="205" height="70" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow-sm)"/>
+  <text x="467" y="286" text-anchor="middle" font-size="8" fill="#1e293b" font-weight="700">Understanding The Guest</text>
+  <text x="467" y="302" text-anchor="middle" font-size="6.5" fill="#64748b">Reads dates, guest count,</text>
+  <text x="467" y="313" text-anchor="middle" font-size="6.5" fill="#64748b">name, email and phone number</text>
+
+  <rect x="585" y="263" width="205" height="70" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow-sm)"/>
+  <text x="687" y="286" text-anchor="middle" font-size="8" fill="#1e293b" font-weight="700">Picking Hotel &amp; Room</text>
+  <text x="687" y="302" text-anchor="middle" font-size="6.5" fill="#64748b">Understands the guest's choice</text>
+  <text x="687" y="313" text-anchor="middle" font-size="6.5" fill="#64748b">from a numbered list</text>
+
+  <rect x="805" y="263" width="180" height="70" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow-sm)"/>
+  <text x="895" y="286" text-anchor="middle" font-size="8" fill="#1e293b" font-weight="700">Booking Confirmation</text>
+  <text x="895" y="302" text-anchor="middle" font-size="6.5" fill="#64748b">Hotel, room, dates and price,</text>
+  <text x="895" y="313" text-anchor="middle" font-size="6.5" fill="#64748b">with a booking reference</text>
+
+  <rect x="220" y="352" width="760" height="28" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+  <text x="600" y="370" text-anchor="middle" font-size="7.5" fill="#ea580c" font-weight="600">The 7 steps: destination → dates → guests → hotel → room → contact details → confirmation</text>
+
+  <!-- Two arrows down: Memory + Hotel system -->
+  <line x1="400" y1="403" x2="400" y2="436" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#arr-purple)"/>
+  <text x="330" y="422" font-size="7" fill="#7c3aed" font-weight="600">Remembers progress</text>
+  <line x1="800" y1="403" x2="800" y2="436" stroke="#0891b2" stroke-width="1.8" marker-end="url(#arr-cyan)"/>
+  <text x="810" y="422" font-size="7" fill="#0891b2" font-weight="600">Checks with the hotel</text>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- LAYER 4a: CONVERSATION MEMORY                -->
+  <!-- ═══════════════════════════════════════════ -->
+  <rect x="140" y="439" width="520" height="115" rx="12" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="140" y="439" width="520" height="3.5" rx="12" fill="#7c3aed"/>
+  <text x="400" y="458" text-anchor="middle" font-size="9" fill="#7c3aed" font-weight="700" letter-spacing="2">CONVERSATION MEMORY</text>
+
+  <rect x="160" y="470" width="235" height="65" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow-sm)"/>
+  <text x="277" y="415" text-anchor="middle" font-size="18">🗄</text>
+  <text x="277" y="493" text-anchor="middle" font-size="8" fill="#1e293b" font-weight="700">Remembers Each Guest</text>
+  <text x="277" y="509" text-anchor="middle" font-size="6.5" fill="#64748b">Keeps track of where every</text>
+  <text x="277" y="520" text-anchor="middle" font-size="6.5" fill="#64748b">guest left off in their booking</text>
+
+  <rect x="405" y="470" width="235" height="65" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow-sm)"/>
+  <text x="522" y="490" text-anchor="middle" font-size="8" fill="#1e293b" font-weight="700">Why It's Needed</text>
+  <text x="522" y="506" text-anchor="middle" font-size="6.5" fill="#64748b">So a guest can pick up right</text>
+  <text x="522" y="517" text-anchor="middle" font-size="6.5" fill="#64748b">where they left off, any time</text>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- LAYER 4b: HOTEL WEBSITE                      -->
+  <!-- ═══════════════════════════════════════════ -->
+  <rect x="680" y="439" width="400" height="115" rx="12" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="680" y="439" width="400" height="3.5" rx="12" fill="#0891b2"/>
+  <text x="880" y="458" text-anchor="middle" font-size="9" fill="#0891b2" font-weight="700" letter-spacing="2">HOTEL WEBSITE (PARTNER SYSTEM)</text>
+
+  <rect x="700" y="470" width="360" height="65" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow-sm)"/>
+  <text x="740" y="412" text-anchor="middle" font-size="18">🏨</text>
+  <text x="880" y="490" text-anchor="middle" font-size="8" fill="#1e293b" font-weight="700">The actual hotel booking system</text>
+  <text x="880" y="506" text-anchor="middle" font-size="6.5" fill="#64748b">Checks room availability, holds a room,</text>
+  <text x="880" y="517" text-anchor="middle" font-size="6.5" fill="#64748b">and completes the booking &amp; payment</text>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- FLOW: END-TO-END REQUEST/RESPONSE PATH                  -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <text x="600" y="597" text-anchor="middle" font-size="9" fill="#94a3b8" font-weight="700" letter-spacing="3">FROM ONE MESSAGE TO ONE REPLY</text>
+
+  <rect x="60" y="612" width="1080" height="110" rx="12" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="60" y="612" width="1080" height="3.5" rx="12" fill="#16a34a"/>
+  <text x="600" y="632" text-anchor="middle" font-size="8" fill="#16a34a" font-weight="700" letter-spacing="2">WHAT HAPPENS FOR EVERY MESSAGE</text>
+
+  <circle cx="140" cy="677" r="20" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <text x="140" y="682" text-anchor="middle" font-size="15">📱</text>
+  <text x="140" y="706" text-anchor="middle" font-size="7" fill="#1e293b" font-weight="700">Guest sends</text>
+  <line x1="162" y1="677" x2="242" y2="677" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+  <circle cx="264" cy="677" r="20" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="264" y="682" text-anchor="middle" font-size="15">🤖</text>
+  <text x="264" y="706" text-anchor="middle" font-size="7" fill="#1e293b" font-weight="700">Booking agent thinks</text>
+  <line x1="286" y1="677" x2="365" y2="677" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arr-purple)"/>
+
+  <circle cx="387" cy="677" r="20" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+  <text x="387" y="682" text-anchor="middle" font-size="15">🗄</text>
+  <text x="387" y="706" text-anchor="middle" font-size="7" fill="#1e293b" font-weight="700">Checks memory</text>
+  <line x1="409" y1="677" x2="489" y2="677" stroke="#0891b2" stroke-width="1.5" marker-end="url(#arr-cyan)"/>
+
+  <circle cx="511" cy="677" r="20" fill="#ecfeff" stroke="#0891b2" stroke-width="2"/>
+  <text x="511" y="682" text-anchor="middle" font-size="15">🏨</text>
+  <text x="511" y="706" text-anchor="middle" font-size="7" fill="#1e293b" font-weight="700">Talks to hotel system</text>
+  <line x1="533" y1="677" x2="612" y2="677" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+
+  <circle cx="634" cy="677" r="20" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <text x="634" y="682" text-anchor="middle" font-size="15">📝</text>
+  <text x="634" y="706" text-anchor="middle" font-size="7" fill="#1e293b" font-weight="700">Writes the reply</text>
+  <line x1="656" y1="677" x2="736" y2="677" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arr-green)"/>
+
+  <circle cx="758" cy="677" r="20" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <text x="758" y="682" text-anchor="middle" font-size="15">💬</text>
+  <text x="758" y="706" text-anchor="middle" font-size="7" fill="#1e293b" font-weight="700">Sends it back</text>
+
+  <rect x="880" y="657" width="220" height="50" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="0.8"/>
+  <text x="990" y="673" text-anchor="middle" font-size="6.5" fill="#16a34a" font-weight="700">NOTHING IS SKIPPED</text>
+  <text x="990" y="686" text-anchor="middle" font-size="6" fill="#64748b">The reply is only sent once</text>
+  <text x="990" y="697" text-anchor="middle" font-size="6" fill="#64748b">every step above is finished</text>
+
+</svg>
+
+</div>
+</body>
+</html>

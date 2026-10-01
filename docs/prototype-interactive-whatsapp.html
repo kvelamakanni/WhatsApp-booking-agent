@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp Booking — Interactive Prototype</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+  body { background: #eef1f5; padding: 2.5rem 1rem; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; display: flex; gap: 2.5rem; align-items: flex-start; }
+
+  .header { text-align: center; margin-bottom: 2rem; }
+  .header h1 { font-size: 1.4rem; font-weight: 800; color: #1e293b; letter-spacing: 0.5px; }
+  .header p { font-size: 0.85rem; color: #64748b; margin-top: 0.4rem; }
+  .header .badge {
+    display: inline-block; margin-top: 0.7rem; background: #fef3c7; color: #92400e;
+    font-size: 0.7rem; font-weight: 700; padding: 4px 12px; border-radius: 999px;
+  }
+
+  /* ── Phone frame ── */
+  .phone {
+    width: 380px; flex-shrink: 0;
+    background: #111; border-radius: 42px; padding: 12px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+  }
+  .screen {
+    background: #ECE5DD;
+    border-radius: 30px;
+    overflow: hidden;
+    height: 780px;
+    display: flex; flex-direction: column;
+  }
+  .chat-header {
+    background: #075E54; color: #fff; padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  .chat-header .avatar {
+    width: 38px; height: 38px; border-radius: 50%; background: #128C7E;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .chat-header .info b { font-size: 0.92rem; display: block; }
+  .chat-header .info span { font-size: 0.68rem; opacity: 0.8; }
+
+  .messages {
+    flex: 1; overflow-y: auto; padding: 14px 10px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .messages::-webkit-scrollbar { width: 5px; }
+  .messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
+
+  .row { display: flex; }
+  .row.out { justify-content: flex-end; }
+
+  .bubble {
+    max-width: 82%;
+    background: #fff;
+    border-radius: 10px;
+    padding: 9px 11px;
+    font-size: 0.8rem;
+    color: #1e293b;
+    line-height: 1.45;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+  }
+  .row.out .bubble { background: #DCF8C6; }
+  .bubble .time { display: block; text-align: right; font-size: 0.6rem; color: #8a8a8a; margin-top: 3px; }
+
+  /* interactive: reply buttons */
+  .bubble.with-buttons { padding-bottom: 0; }
+  .btn-row {
+    border-top: 1px solid #ecebe9; margin-top: 8px;
+    padding: 9px 4px; text-align: center; color: #0a84c9;
+    font-size: 0.78rem; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-row:active { background: #f5f5f5; }
+  .btn-row svg { width: 13px; height: 13px; }
+
+  /* interactive: list message sheet */
+  .list-cta {
+    border-top: 1px solid #ecebe9; margin-top: 8px;
+    padding: 9px 4px; text-align: center; color: #0a84c9;
+    font-size: 0.78rem; font-weight: 600;
+  }
+  .sheet {
+    background: #fff; border-radius: 12px; padding: 10px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+    max-width: 88%;
+  }
+  .sheet .sheet-title { font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 6px 8px; }
+  .sheet-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 6px; border-radius: 8px;
+  }
+  .sheet-row + .sheet-row { border-top: 1px solid #f1f1f1; }
+  .sheet-row .thumb {
+    width: 40px; height: 40px; border-radius: 8px; background: #e2e8f0;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  }
+  .sheet-row .t { font-size: 0.78rem; font-weight: 700; color: #1e293b; }
+  .sheet-row .s { font-size: 0.68rem; color: #64748b; margin-top: 1px; }
+  .sheet-row .chev { margin-left: auto; color: #cbd5e1; font-size: 0.9rem; }
+
+  /* interactive: form (WhatsApp Flow style) */
+  .flow-card {
+    background: #fff; border-radius: 12px; padding: 12px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.08); max-width: 88%;
+  }
+  .flow-card .flow-title { font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+  .field { margin-bottom: 8px; }
+  .field label { font-size: 0.65rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  .field .val { font-size: 0.8rem; color: #1e293b; border-bottom: 1.5px solid #e2e8f0; padding: 4px 0; margin-top: 2px; }
+  .flow-submit {
+    margin-top: 6px; background: #25D366; color: #fff; text-align: center;
+    font-size: 0.8rem; font-weight: 700; padding: 9px; border-radius: 8px;
+  }
+
+  /* confirmation card */
+  .confirm-card {
+    background: #fff; border-radius: 12px; overflow: hidden; max-width: 88%;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+  }
+  .confirm-card .banner {
+    background: linear-gradient(135deg,#16a34a,#0d9488); color: #fff;
+    padding: 14px; text-align: center;
+  }
+  .confirm-card .banner .check { font-size: 26px; }
+  .confirm-card .banner .b1 { font-size: 0.85rem; font-weight: 800; margin-top: 2px; }
+  .confirm-card .body { padding: 10px 12px; font-size: 0.75rem; color: #334155; }
+  .confirm-card .body .row2 { display: flex; justify-content: space-between; padding: 4px 0; }
+  .confirm-card .body .row2 span:first-child { color: #94a3b8; }
+  .confirm-card .body .ref {
+    margin-top: 6px; background: #f1f5f9; border-radius: 6px; padding: 6px 8px;
+    text-align: center; font-weight: 800; letter-spacing: 1px; color: #0f172a; font-size: 0.78rem;
+  }
+
+  .chat-input {
+    background: #f0f0f0; padding: 10px 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  }
+  .chat-input .box { flex: 1; background: #fff; border-radius: 20px; padding: 8px 14px; font-size: 0.78rem; color: #94a3b8; }
+  .chat-input .mic { width: 34px; height: 34px; border-radius: 50%; background: #075E54; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; }
+
+  /* ── Notes panel ── */
+  .notes { flex: 1; }
+  .notes h2 { font-size: 1rem; font-weight: 800; color: #1e293b; margin-bottom: 1rem; }
+  .note {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 12px;
+  }
+  .note .k { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .note.a .k { color: #7c3aed; }
+  .note.b .k { color: #0891b2; }
+  .note.c .k { color: #ea580c; }
+  .note.d .k { color: #16a34a; }
+  .note p { font-size: 0.8rem; color: #475569; line-height: 1.5; }
+  .note .tag {
+    display: inline-block; margin-top: 6px; background: #f1f5f9; color: #475569;
+    font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>WhatsApp Booking — Interactive Prototype</h1>
+  <p>Same 7-step booking logic, but using WhatsApp's native buttons, lists and forms instead of plain text</p>
+  <div class="badge">🔒 Prototype only — no changes made to the live booking flow</div>
+</div>
+
+<div class="wrap">
+
+  <!-- PHONE MOCKUP -->
+  <div class="phone">
+    <div class="screen">
+      <div class="chat-header">
+        <div class="avatar">🏨</div>
+        <div class="info">
+          <b>Hotel Booking Assistant</b>
+          <span>online</span>
+        </div>
+      </div>
+
+      <div class="messages">
+
+        <!-- Step 1: Destination as a List Message -->
+        <div class="row">
+          <div class="bubble">
+            Hi! Where would you like to stay?
+            <div class="list-cta">📋 View destinations</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="sheet">
+            <div class="sheet-title">Select a destination</div>
+            <div class="sheet-row"><div class="thumb">🗽</div><div><div class="t">New York</div><div class="s">USA</div></div><div class="chev">›</div></div>
+            <div class="sheet-row"><div class="thumb">🏙️</div><div><div class="t">Chicago</div><div class="s">USA</div></div><div class="chev">›</div></div>
+            <div class="sheet-row"><div class="thumb">🌴</div><div><div class="t">Los Angeles</div><div class="s">USA</div></div><div class="chev">›</div></div>
+            <div class="sheet-row"><div class="thumb">🗼</div><div><div class="t">Paris</div><div class="s">France</div></div><div class="chev">›</div></div>
+          </div>
+        </div>
+        <div class="row out"><div class="bubble">Paris<span class="time">10:01</span></div></div>
+
+        <!-- Step 2: Dates as quick reply buttons -->
+        <div class="row">
+          <div class="bubble with-buttons">
+            Got it — Paris! When would you like to check in?
+            <div class="btn-row">📅 This weekend</div>
+            <div class="btn-row">📅 Next week</div>
+            <div class="btn-row">✏️ Enter dates myself</div>
+          </div>
+        </div>
+        <div class="row out"><div class="bubble">Next week<span class="time">10:02</span></div></div>
+
+        <!-- Step 3: Guests as quick reply buttons -->
+        <div class="row">
+          <div class="bubble with-buttons">
+            Dates set: Oct 6 – Oct 8. How many guests?
+            <div class="btn-row">🧍 1 guest</div>
+            <div class="btn-row">🧍🧍 2 guests</div>
+            <div class="btn-row">👨‍👩‍👧 3+ guests</div>
+          </div>
+        </div>
+        <div class="row out"><div class="bubble">2 guests<span class="time">10:02</span></div></div>
+
+        <!-- Step 4: Hotel list message -->
+        <div class="row">
+          <div class="bubble">
+            Found 2 hotels in Paris for your dates
+            <div class="list-cta">📋 View hotels</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="sheet">
+            <div class="sheet-title">Hotels in Paris</div>
+            <div class="sheet-row"><div class="thumb">🏨</div><div><div class="t">Le Marais Boutique</div><div class="s">$210/night · ★★★★</div></div><div class="chev">›</div></div>
+            <div class="sheet-row"><div class="thumb">🏨</div><div><div class="t">Grand Palais Hotel</div><div class="s">$340/night · ★★★★★</div></div><div class="chev">›</div></div>
+          </div>
+        </div>
+        <div class="row out"><div class="bubble">Le Marais Boutique<span class="time">10:03</span></div></div>
+
+        <!-- Step 5: Room list message -->
+        <div class="row">
+          <div class="bubble">
+            Great choice! Here are the available rooms
+            <div class="list-cta">📋 View rooms</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="sheet">
+            <div class="sheet-title">Rooms — Le Marais Boutique</div>
+            <div class="sheet-row"><div class="thumb">🛏️</div><div><div class="t">Classic King</div><div class="s">$210/night</div></div><div class="chev">›</div></div>
+            <div class="sheet-row"><div class="thumb">🛌</div><div><div class="t">Deluxe Suite</div><div class="s">$340/night</div></div><div class="chev">›</div></div>
+          </div>
+        </div>
+        <div class="row out"><div class="bubble">Classic King<span class="time">10:04</span></div></div>
+
+        <!-- Step 6: Contact details as a Flow-style form -->
+        <div class="row">
+          <div class="bubble">
+            Almost done! Please share your contact details to hold the room
+            <div class="list-cta">📝 Complete details</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="flow-card">
+            <div class="flow-title">Guest Details</div>
+            <div class="field"><label>Full Name</label><div class="val">Karthaveerya V.</div></div>
+            <div class="field"><label>Email</label><div class="val">karthaveerya@example.com</div></div>
+            <div class="field"><label>Phone</label><div class="val">+1 973 873 4147</div></div>
+            <div class="flow-submit">Submit &amp; Confirm Booking</div>
+          </div>
+        </div>
+
+        <!-- Step 7: Confirmation card -->
+        <div class="row">
+          <div class="confirm-card">
+            <div class="banner">
+              <div class="check">✅</div>
+              <div class="b1">Booking Confirmed!</div>
+            </div>
+            <div class="body">
+              <div class="row2"><span>Hotel</span><span>Le Marais Boutique</span></div>
+              <div class="row2"><span>Room</span><span>Classic King</span></div>
+              <div class="row2"><span>Dates</span><span>Oct 6 – Oct 8</span></div>
+              <div class="row2"><span>Total</span><span>USD 420.00</span></div>
+              <div class="ref">KV-E140EC8E</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="chat-input">
+        <div class="box">Type a message</div>
+        <div class="mic">🎤</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTES PANEL -->
+  <div class="notes">
+    <h2>What's different from plain text, and why</h2>
+
+    <div class="note a">
+      <div class="k">List Messages</div>
+      <p>Destination, hotel and room selection become tap-to-pick lists instead of "reply with a number" — no more mismatched numbers or typos, and it looks native to WhatsApp.</p>
+      <span class="tag">WhatsApp Cloud API · interactive/list</span>
+    </div>
+
+    <div class="note b">
+      <div class="k">Quick Reply Buttons</div>
+      <p>Dates and guest count become one-tap buttons for the common cases, while still allowing free text for anything unusual (e.g. "Enter dates myself").</p>
+      <span class="tag">WhatsApp Cloud API · interactive/button</span>
+    </div>
+
+    <div class="note c">
+      <div class="k">WhatsApp Flow (form)</div>
+      <p>Name, email and phone are collected in one native in-chat form instead of three separate free-text messages the bot has to parse and re-ask about when incomplete.</p>
+      <span class="tag">WhatsApp Cloud API · Flows</span>
+    </div>
+
+    <div class="note d">
+      <div class="k">Rich Confirmation Card</div>
+      <p>The final booking summary becomes a clean visual card (still plain text under the hood — WhatsApp text messages support this kind of layout) instead of a wall of text.</p>
+      <span class="tag">Formatted text message</span>
+    </div>
+
+    <div class="note">
+      <div class="k" style="color:#475569">Important caveat</div>
+      <p>Buttons/lists/Flows require extra work: building the interactive JSON payloads Meta expects, handling button/list reply webhooks (a different payload shape than plain text), and Flows specifically need a published Flow JSON + endpoint. This prototype is purely visual — nothing here is wired up yet.</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

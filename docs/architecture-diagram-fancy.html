@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp Hotel Booking Agent — Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: radial-gradient(ellipse at 50% 30%, #201555 0%, #120b3a 40%, #070417 75%, #030210 100%);
+    min-height: 100vh;
+    padding: 2.5rem 1rem 3rem;
+  }
+  .stage { max-width: 1020px; margin: 0 auto; }
+
+  .title { text-align: center; margin-bottom: 0.25rem; }
+  .title h1 {
+    color: #fff; font-size: 1.5rem; font-weight: 900; letter-spacing: 1.5px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #ffffff, #c9c3ff 60%, #a6ece0);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .title p { color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-top: 0.5rem; }
+
+  svg { width: 100%; height: auto; display: block; }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 1.5rem;
+  }
+  .feature {
+    background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 1.1rem 1.2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature::before {
+    content: '';
+    position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+  }
+  .feature.a::before { background: linear-gradient(#8b7bff, transparent); }
+  .feature.b::before { background: linear-gradient(#7fd8c8, transparent); }
+  .feature.c::before { background: linear-gradient(#ffb37f, transparent); }
+  .feature .n { font-size: 0.66rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+  .feature.a .n { color: #b3a8ff; }
+  .feature.b .n { color: #9fe8dc; }
+  .feature.c .n { color: #ffcfa8; }
+  .feature .d { color: rgba(255,255,255,0.78); font-size: 0.78rem; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="title">
+    <h1>WhatsApp Hotel Booking Agent</h1>
+    <p>One message in, a confirmed booking out — everything in between happens automatically</p>
+  </div>
+
+  <svg viewBox="0 0 1020 620" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="hubGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#8b7bff" stop-opacity="0.95"/>
+        <stop offset="55%" stop-color="#5b4cd6" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#5b4cd6" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="hubFill" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#9c8fff"/>
+        <stop offset="100%" stop-color="#5847d9"/>
+      </linearGradient>
+      <linearGradient id="lineA" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#8b7bff" stop-opacity="0.1"/>
+        <stop offset="100%" stop-color="#8b7bff" stop-opacity="0.9"/>
+      </linearGradient>
+      <linearGradient id="lineB" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#7fd8c8" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#7fd8c8" stop-opacity="0.1"/>
+      </linearGradient>
+      <linearGradient id="lineC" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffb37f" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#ffb37f" stop-opacity="0.1"/>
+      </linearGradient>
+      <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="10"/>
+      </filter>
+      <filter id="softSm" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="3"/>
+      </filter>
+    </defs>
+
+    <!-- orbit rings -->
+    <ellipse cx="510" cy="340" rx="420" ry="230" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+    <ellipse cx="510" cy="340" rx="330" ry="180" fill="none" stroke="rgba(255,255,255,0.07)" stroke-dasharray="1 7" stroke-linecap="round" stroke-width="1.4"/>
+
+    <!-- ambient hub glow -->
+    <circle cx="510" cy="340" r="195" fill="url(#hubGlow)"/>
+
+    <!-- curved connector: WhatsApp Channel (top) -->
+    <path d="M 510,205 C 510,240 510,260 510,282" fill="none" stroke="url(#lineA)" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="510" cy="240" r="3" fill="#fff"><animate attributeName="cy" values="215;280;215" dur="3.2s" repeatCount="indefinite"/></circle>
+    <text x="510" y="217" text-anchor="middle" font-size="11.5" fill="#cfc8ff" font-weight="700">guest message in</text>
+    <text x="510" y="231" text-anchor="middle" font-size="11.5" fill="#cfc8ff" font-weight="700">reply sent back out</text>
+
+    <!-- curved connector: Hotel Partner (bottom-right) -->
+    <path d="M 730,470 C 680,440 640,410 600,400" fill="none" stroke="url(#lineB)" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="665" cy="425" r="3" fill="#fff"><animate attributeName="opacity" values="1;0.2;1" dur="2.4s" repeatCount="indefinite"/></circle>
+    <text x="700" y="450" font-size="11.5" fill="#b6ede1" font-weight="700" text-anchor="middle">checks rooms</text>
+    <text x="700" y="466" font-size="11.5" fill="#b6ede1" font-weight="700" text-anchor="middle">&amp; holds a booking</text>
+
+    <!-- curved connector: Conversation Memory (bottom-left) -->
+    <path d="M 290,470 C 340,440 380,410 420,400" fill="none" stroke="url(#lineC)" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="355" cy="425" r="3" fill="#fff"><animate attributeName="opacity" values="0.2;1;0.2" dur="2.4s" repeatCount="indefinite"/></circle>
+    <text x="320" y="450" font-size="11.5" fill="#ffdcc2" font-weight="700" text-anchor="middle">saves &amp; recalls</text>
+    <text x="320" y="466" font-size="11.5" fill="#ffdcc2" font-weight="700" text-anchor="middle">guest progress</text>
+
+    <!-- central hub -->
+    <circle cx="510" cy="340" r="118" fill="url(#hubFill)" filter="url(#soft)" opacity="0.4"/>
+    <circle cx="510" cy="340" r="108" fill="url(#hubFill)"/>
+    <circle cx="510" cy="340" r="108" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+    <circle cx="510" cy="340" r="100" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="1 5"/>
+    <text x="510" y="328" text-anchor="middle" font-size="20" fill="#fff" font-weight="900" letter-spacing="0.5">BOOKING</text>
+    <text x="510" y="352" text-anchor="middle" font-size="20" fill="#fff" font-weight="900" letter-spacing="0.5">AGENT</text>
+    <text x="510" y="372" text-anchor="middle" font-size="9.5" fill="#e4e0ff" font-weight="600" letter-spacing="0.5">UNDERSTANDS · CHECKS · CONFIRMS</text>
+
+    <!-- Node: WhatsApp Channel (top) -->
+    <g>
+      <rect x="390" y="90" width="240" height="100" rx="20" fill="rgba(255,255,255,0.07)" stroke="rgba(139,123,255,0.5)" stroke-width="1.4"/>
+      <circle cx="430" cy="122" r="18" fill="rgba(139,123,255,0.18)"/>
+      <text x="430" y="129" text-anchor="middle" font-size="17">💬</text>
+      <text x="450" y="120" font-size="13" fill="#fff" font-weight="800">WhatsApp Channel</text>
+      <text x="450" y="140" font-size="9.5" fill="rgba(255,255,255,0.62)">Guest texts a normal number —</text>
+      <text x="450" y="153" font-size="9.5" fill="rgba(255,255,255,0.62)">Meta's platform relays every message</text>
+      <text x="450" y="166" font-size="9.5" fill="rgba(255,255,255,0.62)">both ways, instantly</text>
+    </g>
+
+    <!-- Node: Hotel Partner (bottom-right) -->
+    <g>
+      <rect x="730" y="470" width="220" height="100" rx="20" fill="rgba(255,255,255,0.07)" stroke="rgba(127,216,200,0.5)" stroke-width="1.4"/>
+      <circle cx="765" cy="502" r="18" fill="rgba(127,216,200,0.18)"/>
+      <text x="765" y="509" text-anchor="middle" font-size="17">🏨</text>
+      <text x="787" y="500" font-size="13" fill="#fff" font-weight="800">Hotel Partner</text>
+      <text x="787" y="520" font-size="9.5" fill="rgba(255,255,255,0.62)">Their own live system —</text>
+      <text x="787" y="533" font-size="9.5" fill="rgba(255,255,255,0.62)">real rooms, real prices,</text>
+      <text x="787" y="546" font-size="9.5" fill="rgba(255,255,255,0.62)">real payment</text>
+    </g>
+
+    <!-- Node: Conversation Memory (bottom-left) -->
+    <g>
+      <rect x="70" y="470" width="220" height="100" rx="20" fill="rgba(255,255,255,0.07)" stroke="rgba(255,179,127,0.5)" stroke-width="1.4"/>
+      <circle cx="105" cy="502" r="18" fill="rgba(255,179,127,0.18)"/>
+      <text x="105" y="509" text-anchor="middle" font-size="17">🗂</text>
+      <text x="127" y="500" font-size="13" fill="#fff" font-weight="800">Conversation Memory</text>
+      <text x="127" y="520" font-size="9.5" fill="rgba(255,255,255,0.62)">Remembers exactly where</text>
+      <text x="127" y="533" font-size="9.5" fill="rgba(255,255,255,0.62)">each guest left off, so</text>
+      <text x="127" y="546" font-size="9.5" fill="rgba(255,255,255,0.62)">nothing is ever lost</text>
+    </g>
+
+  </svg>
+
+  <div class="features">
+    <div class="feature a">
+      <div class="n">Step 1 · Understand</div>
+      <div class="d">Reads the destination, dates, number of guests, and contact details straight from a normal message</div>
+    </div>
+    <div class="feature b">
+      <div class="n">Step 2 · Match</div>
+      <div class="d">Matches the guest's pick of hotel and room from a simple numbered list</div>
+    </div>
+    <div class="feature c">
+      <div class="n">Step 3 · Confirm</div>
+      <div class="d">Books the room with the hotel and replies with a confirmation and reference number</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
