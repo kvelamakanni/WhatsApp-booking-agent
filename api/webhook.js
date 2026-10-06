@@ -6,82 +6,11 @@
 // fully rule-based and calls Devara Hotels MCP directly.
 
 const { createSession, greet, dispatch } = require('../lib/bookingAgent');
-const { getSession, setSession, clearSession, acquireLock, releaseLock, markMessageProcessed } = require('../lib/session');
+const { getSession, setSession, clearSession, acquireLock, releaseLock, markMessageProcessed, setPayment } = require('../lib/session');
+const { sendReply } = require('../lib/whatsapp');
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const RESET_KEYWORDS = new Set(['clear', 'reset', 'restart', 'start over']);
-
-async function sendWhatsAppPayload(phoneNumberId, body) {
-  try {
-    const res = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json().catch(() => null);
-    if (!res.ok) {
-      console.error('WhatsApp API rejected the message:', res.status, JSON.stringify(data));
-      return;
-    }
-    console.log('Reply sent:', JSON.stringify(body), '—', JSON.stringify(data));
-  } catch (err) {
-    console.error('Error sending WhatsApp reply:', err);
-  }
-}
-
-async function sendWhatsAppText(to, phoneNumberId, text) {
-  await sendWhatsAppPayload(phoneNumberId, {
-    messaging_product: 'whatsapp',
-    to,
-    text: { body: text },
-  });
-}
-
-/**
- * Sends an interactive List Message or Quick Reply Buttons message.
- * `reply` is one of the typed objects bookingAgent.js now returns:
- *   { type: 'list', body, button, rows: [{id, title, description?}] }
- *   { type: 'button', body, buttons: [{id, title}] }
- */
-async function sendWhatsAppInteractive(to, phoneNumberId, reply) {
-  const interactive =
-    reply.type === 'list'
-      ? {
-          type: 'list',
-          body: { text: reply.body },
-          action: {
-            button: reply.button,
-            sections: [{ rows: reply.rows.map((r) => ({ id: r.id, title: r.title, description: r.description })) }],
-          },
-        }
-      : {
-          type: 'button',
-          body: { text: reply.body },
-          action: {
-            buttons: reply.buttons.map((b) => ({ type: 'reply', reply: { id: b.id, title: b.title } })),
-          },
-        };
-
-  await sendWhatsAppPayload(phoneNumberId, {
-    messaging_product: 'whatsapp',
-    to,
-    type: 'interactive',
-    interactive,
-  });
-}
-
-/** Sends a plain string as text, or a { type: 'list' | 'button', ... } object as an interactive message. */
-async function sendReply(to, phoneNumberId, reply) {
-  if (typeof reply === 'string') {
-    await sendWhatsAppText(to, phoneNumberId, reply);
-  } else {
-    await sendWhatsAppInteractive(to, phoneNumberId, reply);
-  }
-}
 
 module.exports = async (req, res) => {
   if (req.method === 'GET') {
@@ -198,7 +127,10 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const replies = await dispatch(session, text);
+    // Payment needs to know who to message later (from + phoneNumberId) and
+    // which public URL Stripe should send the guest back to.
+    const baseUrl = process.env.PUBLIC_BASE_URL || `https://${req.headers.host}`;
+    const replies = await dispatch(session, text, { from, phoneNumberId, baseUrl, savePayment: setPayment });
     await setSession(from, session);
 
     for (const reply of replies) {
