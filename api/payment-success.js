@@ -24,6 +24,7 @@ module.exports = async (req, res) => {
   }
 
   let claimed = false;
+  let record = null;
   try {
     const checkout = await getCheckoutSession(stripeSessionId);
     if (checkout.payment_status !== 'paid') {
@@ -34,7 +35,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    const record = await getPayment(stripeSessionId);
+    record = await getPayment(stripeSessionId);
     if (!record || checkout.metadata?.mcpSessionId !== record.mcpSessionId) {
       return sendPage(res, 404, {
         title: 'Booking not found',
@@ -44,7 +45,9 @@ module.exports = async (req, res) => {
     }
 
     // The page can be refreshed or opened twice — only the first hit books.
-    claimed = await markPaymentCompleted(stripeSessionId);
+    // The guard is per MCP booking, shared with the in-chat saved-card
+    // path, so a booking can never be completed by both.
+    claimed = await markPaymentCompleted(record.mcpSessionId);
     if (claimed) {
       const confirmation = await completeAfterPayment(record);
 
@@ -65,7 +68,7 @@ module.exports = async (req, res) => {
   } catch (err) {
     console.error('payment-success error:', err);
     // Booking didn't complete, so let a refresh of this page try again.
-    if (claimed) await releasePaymentClaim(stripeSessionId).catch(() => {});
+    if (claimed && record) await releasePaymentClaim(record.mcpSessionId).catch(() => {});
     return sendPage(res, 500, {
       title: 'Something went wrong',
       message: "Your payment went through, but we couldn't finish the booking. Please refresh this page in a moment.",

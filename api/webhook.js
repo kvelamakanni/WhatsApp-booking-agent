@@ -6,7 +6,8 @@
 // fully rule-based and calls Devara Hotels MCP directly.
 
 const { createSession, greet, dispatch } = require('../lib/bookingAgent');
-const { getSession, setSession, clearSession, acquireLock, releaseLock, markMessageProcessed, setPayment } = require('../lib/session');
+const sessionStore = require('../lib/session');
+const { getSession, setSession, clearSession, acquireLock, releaseLock, markMessageProcessed } = sessionStore;
 const { sendReply } = require('../lib/whatsapp');
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
@@ -130,7 +131,7 @@ module.exports = async (req, res) => {
     // Payment needs to know who to message later (from + phoneNumberId) and
     // which public URL Stripe should send the guest back to.
     const baseUrl = process.env.PUBLIC_BASE_URL || `https://${req.headers.host}`;
-    const replies = await dispatch(session, text, { from, phoneNumberId, baseUrl, savePayment: setPayment });
+    const replies = await dispatch(session, text, { from, phoneNumberId, baseUrl, store: sessionStore });
     await setSession(from, session);
 
     for (const reply of replies) {
