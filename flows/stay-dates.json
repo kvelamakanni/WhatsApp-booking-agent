@@ -26,8 +26,7 @@
                 "min-date": "${data.min_date}",
                 "min-days": 1,
                 "max-days": 30,
-                "required": true,
-                "error-message": "Pick a check-in and a check-out date"
+                "required": true
               },
               {
                 "type": "Footer",
