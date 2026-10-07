@@ -20,13 +20,13 @@
                 "type": "CalendarPicker",
                 "name": "dates",
                 "mode": "range",
-                "label": "Stay dates",
+                "label": { "start-date": "Check-in", "end-date": "Check-out" },
                 "title": "Check-in and check-out",
                 "description": "Tap your check-in date, then your check-out date.",
                 "min-date": "${data.min_date}",
                 "min-days": 1,
                 "max-days": 30,
-                "required": true
+                "required": { "start-date": true, "end-date": true }
               },
               {
                 "type": "Footer",
