@@ -1,0 +1,46 @@
+{
+  "version": "7.3",
+  "screens": [
+    {
+      "id": "DATES",
+      "title": "Choose dates",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "min_date": { "type": "string", "__example__": "2026-10-07" }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "Form",
+            "name": "form",
+            "children": [
+              {
+                "type": "CalendarPicker",
+                "name": "dates",
+                "mode": "range",
+                "label": "Stay dates",
+                "title": "Check-in and check-out",
+                "description": "Tap your check-in date, then your check-out date.",
+                "min-date": "${data.min_date}",
+                "min-days": 1,
+                "max-days": 30,
+                "required": true,
+                "error-message": "Pick a check-in and a check-out date"
+              },
+              {
+                "type": "Footer",
+                "label": "Continue",
+                "on-click-action": {
+                  "name": "complete",
+                  "payload": { "dates": "${form.dates}" }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

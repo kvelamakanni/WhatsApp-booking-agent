@@ -9,6 +9,7 @@ const { createSession, greet, dispatch } = require('../lib/bookingAgent');
 const sessionStore = require('../lib/session');
 const { getSession, setSession, clearSession, acquireLock, releaseLock, markMessageProcessed } = sessionStore;
 const { sendReply } = require('../lib/whatsapp');
+const { flowReplyToText } = require('../lib/flows');
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const RESET_KEYWORDS = new Set(['clear', 'reset', 'restart', 'start over']);
@@ -55,10 +56,15 @@ module.exports = async (req, res) => {
   // the existing plain-text parsing already accepts — e.g. "2" for the
   // second hotel, or "New York" for that destination — so every step
   // handler keeps working unchanged whether the guest tapped or typed.
-  const text =
-    message.type === 'interactive'
-      ? message.interactive?.button_reply?.id ?? message.interactive?.list_reply?.id
-      : message.text?.body;
+  // A submitted calendar (WhatsApp Flow) is an interactive "nfm_reply" whose
+  // payload is a JSON string; it becomes a `flow_dates:START,END` token.
+  let text;
+  if (message.type === 'interactive') {
+    const i = message.interactive;
+    text = i?.type === 'nfm_reply' ? flowReplyToText(i.nfm_reply) : i?.button_reply?.id ?? i?.list_reply?.id;
+  } else {
+    text = message.text?.body;
+  }
 
   console.log(`Message from ${from}: ${text}`);
 
